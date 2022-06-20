@@ -34,6 +34,8 @@ def compress():
     output = open(f"{pathlib.Path(name)}.ac", "wb")
     output.write((len(prob) % 256).to_bytes(1, byteorder="big"))
 
+    decimal.getcontext().prec = 1000
+
     for key in prob:
         output.write(key)
         output.write(prob[key].to_bytes(4, byteorder="big"))
@@ -46,27 +48,27 @@ def compress():
         prob[i] += prob[i - 1]
     prob.insert(0, 0)
     prob[len(prob) - 1] = decimal.Decimal(1)
-    print(prob)
-    print(prob_id)
-    chunk_size = 4
+
     start, end = decimal.Decimal(0), decimal.Decimal(1)
     chunk = 0
     result = 0
+    cap = 256 ** tools.chunk_size
+
     for item in content:
         interval = end - start
         end = start + interval * prob[prob_id[item.to_bytes(1, byteorder="big")] + 1]
         start = start + interval * prob[prob_id[item.to_bytes(1, byteorder="big")]]
         chunk += 1
-        if chunk == 8:
+        if chunk == tools.num:
             chunk = 0
-            result = int(256 ** chunk_size * (end + start) / 2)
-            output.write(result.to_bytes(chunk_size, byteorder="big"))
+            result = int(cap * (end + start) / 2)
+            output.write(result.to_bytes(tools.chunk_size, byteorder="big"))
             print(result, end=' ')
             start, end = decimal.Decimal(0), decimal.Decimal(1)
     if chunk:
-        result = int(256 ** chunk_size * (end + start) / 2)
-        output.write(result.to_bytes(chunk_size, byteorder="big"))
-        print(result)
+        result = int(cap * (end + start) / 2)
+        output.write(result.to_bytes(tools.chunk_size, byteorder="big"))
+        #print(result)
 
 
 if __name__ == '__main__':
