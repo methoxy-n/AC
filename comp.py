@@ -1,7 +1,8 @@
 import pathlib
 import sys
-import tools
+import struct
 import decimal
+import tools
 
 
 def compress():
@@ -28,10 +29,10 @@ def compress():
             prob[letter] += 1
         counter += 1
 
-    output = open(f"{pathlib.Path(name)}.ac", "wb")
-    output.write(len(prob).to_bytes(1, byteorder="big"))
+    tools.print_hashsum(content)
 
-    decimal.getcontext().prec = 1000
+    output = open(f"{pathlib.Path(name)}.ac", "wb")
+    output.write((len(prob) % 256).to_bytes(1, byteorder="big"))
 
     for key in prob:
         output.write(key)
@@ -39,3 +40,34 @@ def compress():
     for key in prob:
         prob[key] /= decimal.Decimal(counter)
 
+    prob_id = {k: v for k, v in zip(prob.keys(), range(len(prob)))}
+    prob = [v for v in prob.values()]
+    for i in range(1, len(prob)):
+        prob[i] += prob[i - 1]
+    prob.insert(0, 0)
+    prob[len(prob) - 1] = decimal.Decimal(1)
+    print(prob)
+    print(prob_id)
+    chunk_size = 4
+    start, end = decimal.Decimal(0), decimal.Decimal(1)
+    chunk = 0
+    result = 0
+    for item in content:
+        interval = end - start
+        end = start + interval * prob[prob_id[item.to_bytes(1, byteorder="big")] + 1]
+        start = start + interval * prob[prob_id[item.to_bytes(1, byteorder="big")]]
+        chunk += 1
+        if chunk == 8:
+            chunk = 0
+            result = int(256 ** chunk_size * (end + start) / 2)
+            output.write(result.to_bytes(chunk_size, byteorder="big"))
+            print(result, end=' ')
+            start, end = decimal.Decimal(0), decimal.Decimal(1)
+    if chunk:
+        result = int(256 ** chunk_size * (end + start) / 2)
+        output.write(result.to_bytes(chunk_size, byteorder="big"))
+        print(result)
+
+
+if __name__ == '__main__':
+    compress()
