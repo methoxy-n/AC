@@ -1,6 +1,5 @@
 import pathlib
 import sys
-import struct
 import decimal
 import tools
 
@@ -18,7 +17,7 @@ def compress():
         print("File has already been compressed")
         exit()
     content = raw.read()
-    content += (3).to_bytes(1, byteorder="big")
+    #content += (3).to_bytes(1, byteorder="big")
     prob = {}
     counter = 0
     for item in content:
@@ -33,8 +32,8 @@ def compress():
 
     output = open(f"{pathlib.Path(name)}.ac", "wb")
     output.write((len(prob) % 256).to_bytes(1, byteorder="big"))
-
-    decimal.getcontext().prec = 1000
+    checker = counter % tools.num
+    output.write(checker.to_bytes(1, byteorder="big"))
 
     for key in prob:
         output.write(key)
@@ -51,25 +50,28 @@ def compress():
 
     start, end = decimal.Decimal(0), decimal.Decimal(1)
     chunk = 0
-    result = 0
-    cap = 256 ** tools.chunk_size
+    if checker == 0:
+        checker = tools.num
 
     for item in content:
         interval = end - start
         end = start + interval * prob[prob_id[item.to_bytes(1, byteorder="big")] + 1]
         start = start + interval * prob[prob_id[item.to_bytes(1, byteorder="big")]]
         chunk += 1
-        if chunk == tools.num:
+        if chunk == checker:
+            checker = tools.num
             chunk = 0
-            result = int(cap * (end + start) / 2)
+            result = tools.from_interval(start, end)
             output.write(result.to_bytes(tools.chunk_size, byteorder="big"))
             print(result, end=' ')
             start, end = decimal.Decimal(0), decimal.Decimal(1)
     if chunk:
-        result = int(cap * (end + start) / 2)
+        print(" ")
+        result = tools.from_interval(start, end)
         output.write(result.to_bytes(tools.chunk_size, byteorder="big"))
         #print(result)
 
 
 if __name__ == '__main__':
+    decimal.getcontext().prec = 1500
     compress()
