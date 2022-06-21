@@ -5,7 +5,6 @@ import pathlib
 
 
 def decompress():
-    decimal.getcontext().prec = 1000
     raw = ''
     name = ''
     try:
