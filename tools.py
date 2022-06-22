@@ -1,8 +1,8 @@
 import hashlib
 import decimal
 
-chunk_size = 128
-num = 150
+chunk_size = 15
+num = 20
 decimal.getcontext().prec = 1500
 
 

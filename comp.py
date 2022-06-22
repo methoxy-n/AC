@@ -65,11 +65,6 @@ def compress():
             output.write(result.to_bytes(tools.chunk_size, byteorder="big"))
             print(result, end=' ')
             start, end = decimal.Decimal(0), decimal.Decimal(1)
-    if chunk:
-        print(" ")
-        result = tools.from_interval(start, end)
-        output.write(result.to_bytes(tools.chunk_size, byteorder="big"))
-        #print(result)
 
 
 if __name__ == '__main__':
